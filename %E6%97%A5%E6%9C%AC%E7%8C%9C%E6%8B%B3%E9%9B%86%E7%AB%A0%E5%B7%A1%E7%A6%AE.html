@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>作品旅遊大冒險：日本猜拳集章巡禮</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Noto+Sans+TC:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            pink: '#FF6B8B',
+                            yellow: '#FFB800',
+                            teal: '#00C49F',
+                            blue: '#4D96FF',
+                            purple: '#9B51E0',
+                            dark: '#1E293B',
+                            cream: '#FFF9F0'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Noto Sans TC', 'sans-serif'],
+                        fun: ['Fredoka One', 'cursive']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #FFF9F0;
+            background-image: 
+                radial-gradient(#FFB800 0.8px, transparent 0.8px), 
+                radial-gradient(#FF6B8B 0.8px, #FFF9F0 0.8px);
+            background-size: 28px 28px;
+            background-position: 0 0, 14px 14px;
+        }
+
+        /* Fixed 16:9 Image Aspect Ratio Container */
+        .img-16-9-container {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+            overflow: hidden;
+            border-radius: 1.25rem;
+        }
+        .img-16-9-container img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .img-16-9-container:hover img {
+            transform: scale(1.08);
+        }
+
+        /* Smooth Hand Shake Animations */
+        @keyframes handShakePlayer {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-15px) rotate(-15deg); }
+            75% { transform: translateY(10px) rotate(5deg); }
+        }
+        @keyframes handShakeAi {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-15px) rotate(15deg); }
+            75% { transform: translateY(10px) rotate(-5deg); }
+        }
+        .animate-shake-player {
+            animation: handShakePlayer 0.3s ease-in-out infinite;
+        }
+        .animate-shake-ai {
+            animation: handShakeAi 0.3s ease-in-out infinite;
+        }
+
+        /* Pulse glow animation for unlocks */
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(255, 184, 0, 0.5); }
+            50% { box-shadow: 0 0 30px rgba(255, 107, 139, 0.8); }
+        }
+        .unlocked-card {
+            animation: glow 3s infinite ease-in-out;
+        }
+
+        /* Stamp animation */
+        @keyframes stampPop {
+            0% { transform: scale(3) rotate(-20deg); opacity: 0; }
+            50% { transform: scale(0.9) rotate(-5deg); opacity: 1; }
+            100% { transform: scale(1) rotate(-8deg); opacity: 1; }
+        }
+        .animate-stamp {
+            animation: stampPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #FFEEDD;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #FFB800;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="text-slate-800 font-sans min-h-screen flex flex-col justify-between selection:bg-brand-pink selection:text-white">
+
+    <!-- TOP NAVIGATION & GAME HEADER -->
+    <header class="bg-white/95 backdrop-blur-md sticky top-0 z-50 border-b-4 border-brand-yellow shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
+            
+            <!-- Brand Logo -->
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 bg-gradient-to-tr from-brand-pink to-brand-yellow rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-md transform hover:rotate-6 transition">
+                    <i class="fa-solid fa-plane-up"></i>
+                </div>
+                <div>
+                    <h1 class="font-fun text-xl sm:text-2xl text-brand-dark tracking-wide flex items-center gap-2">
+                        日本猜拳集章巡禮 
+                        <span class="bg-brand-pink/10 text-brand-pink text-xs font-bold px-2 py-0.5 rounded-full border border-brand-pink/20">猜拳冒險版</span>
+                    </h1>
+                    <p class="text-xs text-slate-500 font-bold">國中生熱門！邊玩猜拳邊暢遊日本美食景點 🍣✈️</p>
+                </div>
+            </div>
+
+            <!-- Stats Header Widget -->
+            <div class="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm font-black">
+                <!-- Sound Toggle -->
+                <button id="sound-btn" onclick="toggleSound()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition shadow-sm" title="開啟/關閉音效">
+                    <i class="fa-solid fa-volume-high text-brand-blue" id="sound-icon"></i>
+                </button>
+
+                <!-- Travel Stamps Badge -->
+                <div class="bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-stamp text-brand-yellow text-base"></i>
+                    <span>印章: <span id="stamp-count" class="text-brand-dark text-sm">0</span>/6</span>
+                </div>
+
+                <!-- Win Rate -->
+                <div class="bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-chart-line text-emerald-500"></i>
+                    <span>勝率: <span id="win-rate" class="text-emerald-700">0%</span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN BODY CONTAINER -->
+    <main class="max-w-6xl mx-auto px-4 py-6 flex-grow w-full space-y-8">
+
+        <!-- BLOG HERO BANNER & INTRO -->
+        <section class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border-4 border-brand-yellow/40 relative overflow-hidden">
+            <div class="absolute -right-12 -top-12 w-40 h-40 bg-brand-yellow/10 rounded-full blur-2xl pointer-events-none"></div>
+            <div class="grid lg:grid-cols-12 gap-6 items-center">
+                
+                <!-- Text Intro -->
+                <div class="lg:col-span-7 space-y-4">
+                    <div class="inline-flex items-center gap-2 bg-gradient-to-r from-brand-pink to-brand-purple text-white text-xs font-extrabold px-3 py-1 rounded-full shadow-sm">
+                        <i class="fa-solid fa-star"></i> 國中生專屬 ‧ 日本集章大冒險
+                    </div>
+                    <h2 class="text-2xl sm:text-4xl font-black text-brand-dark leading-tight">
+                        出拳吧！挑戰導覽貓「酷洛」<br>解鎖夢幻日本景點與美食遊記 🍜🍡
+                    </h2>
+                    <p class="text-slate-600 text-sm sm:text-base leading-relaxed">
+                        歡迎來到 日本單頁互動旅遊網誌！這次我們結合了經典的猜拳遊戲，每一次出拳對決，都是前進下一個日本名勝的機會！只要累積勝場，就能獲得紀念紀念章、解鎖 16:9 攝影美照與必吃在地美食指南喔！
+                    </p>
+                    
+                    <!-- Progress Bar Component -->
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
+                        <div class="flex justify-between items-center text-xs font-bold">
+                            <span class="text-slate-600 flex items-center gap-1">
+                                <i class="fa-solid fa-map-location-dot text-brand-teal"></i> 環島行程總進度
+                            </span>
+                            <span id="progress-percent" class="text-brand-pink font-extrabold text-sm">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-200 h-3.5 rounded-full overflow-hidden p-0.5 shadow-inner">
+                            <div id="progress-bar-inner" class="bg-gradient-to-r from-brand-pink via-brand-yellow to-brand-teal h-full rounded-full transition-all duration-500 w-0"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-3 pt-1">
+                        <a href="#arena" class="bg-brand-pink hover:bg-pink-600 text-white font-black px-6 py-3 rounded-2xl transition duration-200 shadow-lg hover:shadow-pink-200 flex items-center gap-2 text-sm sm:text-base">
+                            <i class="fa-solid fa-gamepad text-lg"></i> 開啟猜拳對決
+                        </a>
+                        <a href="#passport-section" class="bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold px-5 py-3 rounded-2xl transition duration-200 flex items-center gap-2 text-sm">
+                            <i class="fa-solid fa-passport text-lg"></i> 我的集章冊
+                        </a>
+                        <button onclick="resetProgress()" class="text-slate-400 hover:text-slate-600 font-bold px-3 py-3 text-xs flex items-center gap-1 ml-auto">
+                            <i class="fa-solid fa-rotate-right"></i> 重置進度
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 16:9 Hero Image Preview -->
+                <div class="lg:col-span-5">
+                    <div class="img-16-9-container shadow-xl border-4 border-white transform rotate-1 hover:rotate-0 transition duration-300">
+                        <img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080" 
+                             alt="Japan Travel Feature Image" 
+                             onerror="this.src='https://placehold.co/800x450/FFB800/ffffff?text=Japan+Travel'">
+                        <div class="absolute bottom-3 left-3 bg-brand-dark/80 backdrop-blur-md text-white text-xs px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5">
+                            <i class="fa-solid fa-camera text-brand-yellow"></i> 旅拍封面：千本鳥居
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ROCK-PAPER-SCISSORS GAME ARENA -->
+        <section id="arena" class="bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border-4 border-brand-pink relative">
+            <div class="flex flex-wrap justify-between items-center gap-2 mb-6 border-b pb-4 border-slate-100">
+                <div>
+                    <span class="text-xs font-black text-brand-purple tracking-widest uppercase flex items-center gap-1">
+                        <i class="fa-solid fa-bolt text-brand-yellow"></i> GAME ARENA
+                    </span>
+                    <h3 class="text-2xl font-black text-brand-dark">對決擂台：<span id="target-stage-title" class="text-brand-pink">1. 京都 伏見稻荷大社</span></h3>
+                </div>
+                <div class="bg-slate-100 text-slate-700 px-4 py-2 rounded-2xl text-xs font-bold border border-slate-200">
+                    目前解鎖需求：解鎖下站需累積勝場 <span id="target-wins-needed" class="text-brand-pink font-black text-sm">1</span> 勝
+                </div>
+            </div>
+
+            <!-- Scoreboard & Hands Showcase -->
+            <div class="grid grid-cols-12 items-center bg-gradient-to-b from-amber-50/70 to-orange-50/70 p-4 sm:p-8 rounded-3xl border-2 border-amber-200/80 mb-6 relative overflow-hidden">
+                
+                <!-- Player Side -->
+                <div class="col-span-5 text-center space-y-2">
+                    <div class="w-16 h-16 sm:w-24 sm:h-24 bg-gradient-to-tr from-brand-blue to-blue-400 rounded-3xl mx-auto flex items-center justify-center border-4 border-white shadow-lg text-3xl sm:text-5xl text-white transform -rotate-3">
+                        🎒
+                    </div>
+                    <div class="font-extrabold text-brand-dark text-sm sm:text-lg">挑戰者 (你)</div>
+                    
+                    <!-- Player Selected Hand -->
+                    <div id="player-hand" class="text-5xl sm:text-7xl my-3 min-h-[70px] flex items-center justify-center transition-all duration-200">
+                        ✊
+                    </div>
+                    
+                    <div class="inline-block bg-white px-3 py-1 rounded-full text-xs font-bold text-slate-500 border shadow-sm">
+                        勝場得分: <span id="player-score" class="text-base font-black text-brand-blue">0</span>
+                    </div>
+                </div>
+
+                <!-- VS & Result Indicator -->
+                <div class="col-span-2 text-center flex flex-col items-center justify-center">
+                    <span class="font-fun text-3xl sm:text-5xl text-brand-pink drop-shadow-md animate-pulse">VS</span>
+                    <div id="round-badge" class="mt-3 text-xs sm:text-sm font-black px-3 py-1 rounded-full bg-slate-200 text-slate-700 shadow hidden">
+                        -
+                    </div>
+                </div>
+
+                <!-- AI Opponent Side -->
+                <div class="col-span-5 text-center space-y-2">
+                    <div class="w-16 h-16 sm:w-24 sm:h-24 bg-gradient-to-tr from-brand-purple to-purple-400 rounded-3xl mx-auto flex items-center justify-center border-4 border-white shadow-lg text-3xl sm:text-5xl text-white transform rotate-3">
+                        😸
+                    </div>
+                    <div class="font-extrabold text-brand-dark text-sm sm:text-lg">關主 (黑貓酷洛)</div>
+                    
+                    <!-- AI Selected Hand -->
+                    <div id="ai-hand" class="text-5xl sm:text-7xl my-3 min-h-[70px] flex items-center justify-center transition-all duration-200">
+                        ✊
+                    </div>
+
+                    <div class="inline-block bg-white px-3 py-1 rounded-full text-xs font-bold text-slate-500 border shadow-sm">
+                        貓貓得分: <span id="ai-score" class="text-base font-black text-brand-purple">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Game Status Banner -->
+            <div id="status-message" class="text-center text-sm sm:text-base font-extrabold text-slate-700 bg-amber-50 py-3.5 px-4 rounded-2xl border-2 border-amber-200 mb-6 shadow-inner">
+                👈 請點擊下方按鈕出拳！贏得比賽解鎖新景點照片與集章！
+            </div>
+
+            <!-- Choice Action Buttons -->
+            <div class="grid grid-cols-3 gap-3 sm:gap-6 max-w-xl mx-auto">
+                
+                <!-- Rock -->
+                <button onclick="playMove('rock')" class="choice-btn group bg-white hover:bg-orange-50 border-4 border-orange-200 hover:border-brand-yellow rounded-3xl p-4 sm:p-5 transition-all duration-200 transform hover:-translate-y-2 active:translate-y-0 shadow-lg text-center">
+                    <div class="text-4xl sm:text-6xl group-hover:scale-110 transition duration-200">✊</div>
+                    <div class="font-black text-sm sm:text-base text-brand-dark mt-2">石頭</div>
+                    <span class="text-[10px] sm:text-xs text-slate-400 font-bold block mt-1">勝 剪刀</span>
+                </button>
+
+                <!-- Scissors -->
+                <button onclick="playMove('scissors')" class="choice-btn group bg-white hover:bg-pink-50 border-4 border-pink-200 hover:border-brand-pink rounded-3xl p-4 sm:p-5 transition-all duration-200 transform hover:-translate-y-2 active:translate-y-0 shadow-lg text-center">
+                    <div class="text-4xl sm:text-6xl group-hover:scale-110 transition duration-200">✌️</div>
+                    <div class="font-black text-sm sm:text-base text-brand-dark mt-2">剪刀</div>
+                    <span class="text-[10px] sm:text-xs text-slate-400 font-bold block mt-1">勝 布</span>
+                </button>
+
+                <!-- Paper -->
+                <button onclick="playMove('paper')" class="choice-btn group bg-white hover:bg-blue-50 border-4 border-blue-200 hover:border-brand-blue rounded-3xl p-4 sm:p-5 transition-all duration-200 transform hover:-translate-y-2 active:translate-y-0 shadow-lg text-center">
+                    <div class="text-4xl sm:text-6xl group-hover:scale-110 transition duration-200">✋</div>
+                    <div class="font-black text-sm sm:text-base text-brand-dark mt-2">布</div>
+                    <span class="text-[10px] sm:text-xs text-slate-400 font-bold block mt-1">勝 石頭</span>
+                </button>
+
+            </div>
+        </section>
+
+        <!-- STAMP COLLECTION PASSPORT SECTION -->
+        <section id="passport-section" class="bg-amber-50/80 rounded-3xl p-6 sm:p-8 shadow-xl border-4 border-amber-200">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 bg-amber-500 text-white rounded-xl flex items-center justify-center text-xl shadow">
+                    <i class="fa-solid fa-passport"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl sm:text-2xl font-black text-brand-dark">日本冒險紀念集章冊 (Stamp Passport)</h3>
+                    <p class="text-xs text-amber-800 font-bold">每在猜拳對決中達成勝場目標，就能獲得地區專屬紀念章！</p>
+                </div>
+            </div>
+
+            <!-- Stamp Grid -->
+            <div id="stamp-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                <!-- Stamps generated via JS -->
+            </div>
+        </section>
+
+        <!-- LOGS & TRAVEL BLOG ARTICLES SECTION -->
+        <div class="grid lg:grid-cols-12 gap-8">
+
+            <!-- Battle Logs (Sidebar - 4 Cols) -->
+            <section class="lg:col-span-4 bg-white rounded-3xl p-6 shadow-xl border-2 border-slate-100 flex flex-col h-[520px]">
+                <div class="flex justify-between items-center mb-4 pb-2 border-b">
+                    <h4 class="font-black text-brand-dark text-base flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-brand-blue"></i> 對戰歷史紀錄
+                    </h4>
+                    <span class="text-[11px] text-slate-400 font-bold">即時更新</span>
+                </div>
+                
+                <div id="logs-list" class="custom-scrollbar flex-grow overflow-y-auto space-y-2.5 pr-1 text-xs">
+                    <div class="text-slate-400 text-center py-12 space-y-2">
+                        <i class="fa-solid fa-gamepad text-3xl text-slate-200"></i>
+                        <p>點擊上方出拳按鈕<br>開啟你的第一場對決吧！</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Travel Blog Unlocked Chapters (8 Cols) -->
+            <section class="lg:col-span-8 space-y-6">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl sm:text-2xl font-black text-brand-dark flex items-center gap-2">
+                        <i class="fa-solid fa-book-open text-brand-pink"></i> 日本探索圖文網誌
+                    </h3>
+                    <span class="text-xs text-slate-500 font-bold bg-white px-3 py-1.5 rounded-full border shadow-sm">
+                        已解鎖: <span id="unlocked-text-count" class="text-brand-pink font-extrabold">0</span> 景點
+                    </span>
+                </div>
+
+                <!-- Articles Grid Container -->
+                <div id="articles-container" class="space-y-6">
+                    <!-- Populated dynamically via JavaScript -->
+                </div>
+            </section>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-900 text-white py-8 mt-16 border-t-4 border-brand-yellow">
+        <div class="max-w-6xl mx-auto px-4 text-center space-y-3">
+            <div class="flex justify-center items-center gap-2 text-brand-yellow font-fun text-lg">
+                <i class="fa-solid fa-paper-plane"></i> 日本猜拳集章巡禮
+            </div>
+            <p class="text-xs text-slate-400">專為國中生打造的互動式網頁體驗 ｜ 結合猜拳遊戲 ‧ 旅遊網誌 ‧ 16:9 高畫質攝影藝廊</p>
+            <p class="text-[10px] text-slate-500 font-mono">Single Page Application (SPA) - Fully Responsive</p>
+        </div>
+    </footer>
+
+    <!-- MODAL POPUP FOR STAMP & ARTICLE UNLOCK -->
+    <div id="unlock-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 text-center space-y-4 shadow-2xl border-4 border-brand-yellow transform transition-all scale-95 animate-stamp">
+            <div id="modal-stamp-icon" class="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-4xl mx-auto border-4 border-amber-300 shadow-md">
+                🏯
+            </div>
+            <h3 id="modal-title" class="text-2xl font-black text-brand-dark">解鎖新章節！</h3>
+            <p id="modal-desc" class="text-sm text-slate-600 leading-relaxed">恭喜你贏得勝場！成功獲得地區紀念章並開啟了全新遊記！</p>
+            <button onclick="closeModal()" class="w-full bg-brand-pink hover:bg-pink-600 text-white font-black py-3 rounded-2xl transition duration-200 shadow-lg text-sm sm:text-base">
+                太棒了！繼續冒險 🚀
+            </button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT GAME LOGIC & SOUND ENGINE -->
+    <script>
+        /* --- Web Audio API Synth Sound Engine --- */
+        let soundEnabled = true;
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+            }
+        }
+
+        function playSynthSound(type) {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            } else if (type === 'win') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                osc.frequency.setValueAtTime(1046.50, now + 0.3); // C6
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.5);
+                osc.start(now);
+                osc.stop(now + 0.5);
+            } else if (type === 'lose') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.linearRampToValueAtTime(150, now + 0.3);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'draw') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.setValueAtTime(440, now + 0.12);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } else if (type === 'unlock') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(587.33, now); // D5
+                osc.frequency.setValueAtTime(880, now + 0.12); // A5
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            if (soundEnabled) {
+                icon.className = "fa-solid fa-volume-high text-brand-blue";
+                playSynthSound('click');
+            } else {
+                icon.className = "fa-solid fa-volume-xmark text-slate-400";
+            }
+        }
+
+        /* --- Destinations & Travel Blog Data (16:9 Photos) --- */
+        const travelDestinations = [
+            {
+                id: 1,
+                name: "京都 伏見稻荷大社",
+                requiredWins: 1,
+                unlocked: false,
+                stampEmoji: "⛩️",
+                stampColor: "text-red-500 bg-red-50 border-red-200",
+                image: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                foodImage: "https://images.unsplash.com/photo-1563805042-7684c019e1cb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                tag: "歷史神社",
+                photoTip: "建議清晨前往，順著鳥居陰影捕捉光芒透出的神聖氣氛！",
+                desc: "綿延不絕的朱紅色「千本鳥居」是京都最夢幻的景點！沿著山路漫步，體驗歷史與自然的交織。這裡的狐狸守護神雕像超級帥氣！",
+                foodName: "濃郁宇治抹茶霜淇淋 🍦",
+                likes: 128
+            },
+            {
+                id: 2,
+                name: "富士山 忍野八海",
+                requiredWins: 3,
+                unlocked: false,
+                stampEmoji: "🗻",
+                stampColor: "text-blue-500 bg-blue-50 border-blue-200",
+                image: "https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                foodImage: "https://images.unsplash.com/photo-1617093727343-374698b1b08d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                tag: "聖山雪景",
+                photoTip: "以池水倒影為前景，相機高度拉低能拍出雙倍富士山的絕景！",
+                desc: "忍野八海由富士山融雪經過數十年過濾形成的八個清澈湧泉組成。水質清澈見底，甚至能看見悠游的魚群與藍天倒影！",
+                foodName: "富士山純淨水醬油拉麵 🍜",
+                likes: 256
+            },
+            {
+                id: 3,
+                name: "東京 淺草寺與雷門",
+                requiredWins: 5,
+                unlocked: false,
+                stampEmoji: "🏮",
+                stampColor: "text-rose-500 bg-rose-50 border-rose-200",
+                image: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                foodImage: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                tag: "東京地標",
+                photoTip: "在巨大的紅燈籠「雷門」正下方仰拍，展現超有氣勢的視覺震撼感。",
+                desc: "東京最古老的寺廟！仲見世通商店街熱鬧非凡，古色古香的街景與遠處現代化的晴空塔形成了完美的古今對比。",
+                foodName: "香甜現烤爆漿人形燒 🥞",
+                likes: 310
+            },
+            {
+                id: 4,
+                name: "大阪 道頓堀與心齋橋",
+                requiredWins: 7,
+                unlocked: false,
+                stampEmoji: "🐙",
+                stampColor: "text-orange-500 bg-orange-50 border-orange-200",
+                image: "https://images.unsplash.com/photo-1590559899731-a382839e5549?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                foodImage: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                tag: "美食天堂",
+                photoTip: "晚上前來拍攝運河兩岸繁華的霓虹燈看板，並跟固力果跑跑人招牌擺同款姿勢合照！",
+                desc: "大阪充滿熱情與歡笑的繁華街區！河道兩旁豎立著巨大有趣的立體招牌，美味的平民小吃香氣撲鼻，令人流連忘返。",
+                foodName: "外酥內嫩金黃章魚燒 🐙",
+                likes: 420
+            },
+            {
+                id: 5,
+                name: "北海道 函館山雪景",
+                requiredWins: 9,
+                unlocked: false,
+                stampEmoji: "❄️",
+                stampColor: "text-cyan-500 bg-cyan-50 border-cyan-200",
+                image: "https://images.unsplash.com/photo-1542051841857-5f90071e7989?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                foodImage: "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                tag: "百萬夜景",
+                desc: "榮獲世界三大夜景美譽！特殊的雙灣地形在夜幕低垂時點亮萬家燈火，如同鋪滿璀璨鑽石的黑寶石絲帶。",
+                photoTip: "日落前半小時搭纜車上山，捕捉天空從藍調轉為夜景的魔法時刻（Magic Hour）！",
+                foodName: "豪華港口極鮮海鮮丼 🍣",
+                likes: 512
+            },
+            {
+                id: 6,
+                name: "沖繩 美麗海水族館",
+                requiredWins: 12,
+                unlocked: false,
+                stampEmoji: "🐋",
+                stampColor: "text-teal-500 bg-teal-50 border-teal-200",
+                image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                foodImage: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+                tag: "湛藍海洋",
+                desc: "站在巨大水槽「黑潮之海」面前，近距離觀察龐大的鯨鯊與鬼蝠魟悠遊。彷彿置身於深海奇幻世界中！",
+                photoTip: "使用剪影拍攝技巧，將人物站立於藍色水槽前的身影拍成詩意背影！",
+                foodName: "沖繩濃香紫薯雪糕 🍨",
+                likes: 680
+            }
+        ];
+
+        /* Move Mappings */
+        const moves = {
+            rock: { name: '石頭', emoji: '✊' },
+            scissors: { name: '剪刀', emoji: '✌️' },
+            paper: { name: '布', emoji: '✋' }
+        };
+
+        /* Game State */
+        let playerScore = 0;
+        let aiScore = 0;
+        let totalRounds = 0;
+        let totalWins = 0;
+        let isAnimating = false;
+
+        /* Initialization */
+        window.onload = function() {
+            renderStamps();
+            renderArticles();
+            updateUI();
+        };
+
+        /* Main Game Play Function */
+        function playMove(playerChoice) {
+            if (isAnimating) return;
+            isAnimating = true;
+            playSynthSound('click');
+
+            const playerHandEl = document.getElementById('player-hand');
+            const aiHandEl = document.getElementById('ai-hand');
+            const statusMsg = document.getElementById('status-message');
+            const badge = document.getElementById('round-badge');
+
+            // Set animation class
+            playerHandEl.className = 'text-5xl sm:text-7xl my-3 animate-shake-player text-brand-blue';
+            aiHandEl.className = 'text-5xl sm:text-7xl my-3 animate-shake-ai text-brand-purple';
+            playerHandEl.innerText = '✊';
+            aiHandEl.innerText = '✊';
+
+            statusMsg.innerText = "剪刀... 石頭... 布！對決中！";
+            statusMsg.className = "text-center text-sm sm:text-base font-extrabold text-amber-800 bg-amber-100 py-3.5 px-4 rounded-2xl border-2 border-amber-300 mb-6 shadow-inner animate-pulse";
+
+            setTimeout(() => {
+                // AI Choice Logic
+                const choices = ['rock', 'scissors', 'paper'];
+                const aiChoice = choices[Math.floor(Math.random() * choices.length)];
+
+                // Remove Shake
+                playerHandEl.className = 'text-5xl sm:text-7xl my-3 transform scale-110 transition';
+                aiHandEl.className = 'text-5xl sm:text-7xl my-3 transform scale-110 transition';
+
+                playerHandEl.innerText = moves[playerChoice].emoji;
+                aiHandEl.innerText = moves[aiChoice].emoji;
+
+                const outcome = determineWinner(playerChoice, aiChoice);
+                totalRounds++;
+
+                let logText = '';
+                let logStyle = '';
+
+                if (outcome === 'win') {
+                    playerScore++;
+                    totalWins++;
+                    playSynthSound('win');
+
+                    statusMsg.innerText = `🎉 恭喜！你的【${moves[playerChoice].name}】戰勝了酷洛的【${moves[aiChoice].name}】！`;
+                    statusMsg.className = "text-center text-sm sm:text-base font-extrabold text-emerald-800 bg-emerald-100 py-3.5 px-4 rounded-2xl border-2 border-emerald-300 mb-6 shadow-md";
+                    
+                    badge.innerText = "勝 WIN!";
+                    badge.className = "mt-3 text-xs sm:text-sm font-black px-3 py-1 rounded-full bg-emerald-500 text-white shadow-md animate-bounce";
+
+                    logText = `第 ${totalRounds} 局：勝利 ✌️ (${moves[playerChoice].name} 勝 ${moves[aiChoice].name})`;
+                    logStyle = "text-emerald-700 bg-emerald-50 border-emerald-200";
+
+                    checkProgressUnlocks();
+                } else if (outcome === 'lose') {
+                    aiScore++;
+                    playSynthSound('lose');
+
+                    statusMsg.innerText = `😿 可惜！酷洛出【${moves[aiChoice].name}】贏了你的【${moves[playerChoice].name}】！再試一次！`;
+                    statusMsg.className = "text-center text-sm sm:text-base font-extrabold text-rose-800 bg-rose-100 py-3.5 px-4 rounded-2xl border-2 border-rose-300 mb-6 shadow-md";
+                    
+                    badge.innerText = "敗 LOSE";
+                    badge.className = "mt-3 text-xs sm:text-sm font-black px-3 py-1 rounded-full bg-rose-500 text-white shadow-md";
+
+                    logText = `第 ${totalRounds} 局：戰敗 😿 (${moves[playerChoice].name} 輸 ${moves[aiChoice].name})`;
+                    logStyle = "text-rose-700 bg-rose-50 border-rose-200";
+                } else {
+                    playSynthSound('draw');
+
+                    statusMsg.innerText = `🤝 平手！雙方都出【${moves[playerChoice].name}】，再來一局勝負！`;
+                    statusMsg.className = "text-center text-sm sm:text-base font-extrabold text-amber-800 bg-amber-100 py-3.5 px-4 rounded-2xl border-2 border-amber-300 mb-6 shadow-md";
+                    
+                    badge.innerText = "平 DRAW";
+                    badge.className = "mt-3 text-xs sm:text-sm font-black px-3 py-1 rounded-full bg-slate-400 text-white shadow-md";
+
+                    logText = `第 ${totalRounds} 局：平手 🤝 (雙方出 ${moves[playerChoice].name})`;
+                    logStyle = "text-slate-600 bg-slate-50 border-slate-200";
+                }
+
+                badge.classList.remove('hidden');
+                addLogEntry(logText, logStyle);
+                updateUI();
+                isAnimating = false;
+            }, 750);
+        }
+
+        /* Winner Determination */
+        function determineWinner(p, a) {
+            if (p === a) return 'draw';
+            if (
+                (p === 'rock' && a === 'scissors') ||
+                (p === 'scissors' && a === 'paper') ||
+                (p === 'paper' && a === 'rock')
+            ) {
+                return 'win';
+            }
+            return 'lose';
+        }
+
+        /* Check & Unlock Travel Destinations */
+        function checkProgressUnlocks() {
+            let newlyUnlocked = null;
+
+            travelDestinations.forEach(dest => {
+                if (!dest.unlocked && totalWins >= dest.requiredWins) {
+                    dest.unlocked = true;
+                    newlyUnlocked = dest;
+                }
+            });
+
+            if (newlyUnlocked) {
+                playSynthSound('unlock');
+                confetti({
+                    particleCount: 120,
+                    spread: 80,
+                    origin: { y: 0.6 }
+                });
+
+                renderStamps();
+                renderArticles();
+
+                showModal(newlyUnlocked);
+            }
+        }
+
+        /* Update Global Scores & Progress Bar UI */
+        function updateUI() {
+            document.getElementById('player-score').innerText = playerScore;
+            document.getElementById('ai-score').innerText = aiScore;
+
+            const winRate = totalRounds > 0 ? Math.round((totalWins / totalRounds) * 100) : 0;
+            document.getElementById('win-rate').innerText = `${winRate}%`;
+
+            const unlockedCount = travelDestinations.filter(d => d.unlocked).length;
+            document.getElementById('stamp-count').innerText = unlockedCount;
+            document.getElementById('unlocked-text-count').innerText = unlockedCount;
+
+            // Progress Bar calculation
+            const progressPercent = Math.min(100, Math.round((unlockedCount / travelDestinations.length) * 100));
+            document.getElementById('progress-percent').innerText = `${progressPercent}%`;
+            document.getElementById('progress-bar-inner').style.width = `${progressPercent}%`;
+
+            // Update Target Stage Info in Arena
+            const nextStage = travelDestinations.find(d => !d.unlocked);
+            if (nextStage) {
+                document.getElementById('target-stage-title').innerText = `${nextStage.id}. ${nextStage.name}`;
+                document.getElementById('target-wins-needed').innerText = nextStage.requiredWins;
+            } else {
+                document.getElementById('target-stage-title').innerText = "🎉 賀！已通關全日本 6 大景點！";
+                document.getElementById('target-wins-needed').innerText = "大滿貫！";
+            }
+        }
+
+        /* Render Stamp Passport Cards */
+        function renderStamps() {
+            const container = document.getElementById('stamp-grid');
+            container.innerHTML = '';
+
+            travelDestinations.forEach(dest => {
+                const card = document.createElement('div');
+                if (dest.unlocked) {
+                    card.className = `p-4 rounded-2xl border-2 text-center bg-white shadow-md relative overflow-hidden transform hover:-translate-y-1 transition ${dest.stampColor}`;
+                    card.innerHTML = `
+                        <div class="text-3xl mb-1 animate-stamp">${dest.stampEmoji}</div>
+                        <div class="font-black text-xs text-slate-800 truncate">${dest.name.split(' ')[1] || dest.name}</div>
+                        <span class="text-[9px] bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded-full inline-block mt-1">已集章</span>
+                    `;
+                } else {
+                    card.className = `p-4 rounded-2xl border-2 border-dashed border-slate-200 text-center bg-slate-100/60 opacity-60`;
+                    card.innerHTML = `
+                        <div class="text-3xl mb-1 text-slate-300">🔒</div>
+                        <div class="font-bold text-xs text-slate-400 truncate">${dest.name.split(' ')[1] || dest.name}</div>
+                        <span class="text-[9px] text-slate-400 font-bold block mt-1">${dest.requiredWins}勝解鎖</span>
+                    `;
+                }
+                container.appendChild(card);
+            });
+        }
+
+        /* Render 16:9 Unlocked Blog Articles */
+        function renderArticles() {
+            const container = document.getElementById('articles-container');
+            container.innerHTML = '';
+
+            travelDestinations.forEach(dest => {
+                const article = document.createElement('article');
+                
+                if (dest.unlocked) {
+                    article.className = "bg-white rounded-3xl overflow-hidden shadow-lg border-2 border-brand-yellow/60 hover:shadow-2xl transition-all duration-300 unlocked-card";
+                    article.innerHTML = `
+                        <div class="grid md:grid-cols-12 gap-6 p-5 sm:p-6 items-center">
+                            
+                            <!-- 16:9 Photography Card (5 Cols) -->
+                            <div class="md:col-span-5 space-y-3">
+                                <div class="img-16-9-container shadow-md border-2 border-slate-100">
+                                    <img src="${dest.image}" alt="${dest.name}" onerror="this.src='https://placehold.co/800x450/FFB800/ffffff?text=${encodeURIComponent(dest.name)}'">
+                                    <span class="absolute top-3 left-3 bg-brand-pink text-white text-xs font-black px-2.5 py-1 rounded-xl shadow-md">
+                                        ${dest.tag}
+                                    </span>
+                                </div>
+                                <div class="bg-amber-50 p-2.5 rounded-xl border border-amber-200/80 flex items-center gap-2.5">
+                                    <img src="${dest.foodImage}" class="w-10 h-10 rounded-lg object-cover shadow-sm" alt="Gourmet" onerror="this.src='https://placehold.co/100x100/FFB800/ffffff?text=Food'">
+                                    <div class="text-xs">
+                                        <div class="font-black text-amber-900">${dest.foodName}</div>
+                                        <div class="text-[10px] text-amber-700">部落客 Momo 評分 ⭐️5.0</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Content Details (7 Cols) -->
+                            <div class="md:col-span-7 space-y-3">
+                                <div class="flex justify-between items-start">
+                                    <h4 class="text-xl sm:text-2xl font-black text-brand-dark">${dest.name}</h4>
+                                    <button onclick="likeArticle(${dest.id}, this)" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-3 py-1 rounded-full text-xs font-bold border border-rose-200 transition flex items-center gap-1">
+                                        <i class="fa-solid fa-heart text-rose-500"></i> <span class="like-count">${dest.likes}</span>
+                                    </button>
+                                </div>
+                                <p class="text-slate-600 text-xs sm:text-sm leading-relaxed">${dest.desc}</p>
+                                
+                                <div class="bg-blue-50/80 p-3 rounded-2xl border border-blue-100 text-xs text-blue-900 flex items-start gap-2">
+                                    <i class="fa-solid fa-camera-retro text-brand-blue text-sm mt-0.5"></i>
+                                    <div>
+                                        <span class="font-bold">攝影指導 Tips：</span> ${dest.photoTip}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    article.className = "bg-slate-50/80 rounded-3xl p-6 border-2 border-dashed border-slate-200 text-center space-y-3";
+                    article.innerHTML = `
+                        <div class="w-12 h-12 bg-slate-200 text-slate-400 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold">
+                            🔒
+                        </div>
+                        <h4 class="font-extrabold text-slate-500">【未解鎖景點】 ${dest.name}</h4>
+                        <p class="text-xs text-slate-400">需要勝場累積達 <span class="font-black text-brand-pink">${dest.requiredWins} 勝</span> 即可開啟此 16:9 照片與獨家美食指南！</p>
+                    `;
+                }
+                container.appendChild(article);
+            });
+        }
+
+        /* Like button interactive count */
+        function likeArticle(id, btn) {
+            playSynthSound('click');
+            const countSpan = btn.querySelector('.like-count');
+            let current = parseInt(countSpan.innerText);
+            countSpan.innerText = current + 1;
+            btn.classList.add('scale-110');
+            setTimeout(() => btn.classList.remove('scale-110'), 200);
+        }
+
+        /* Add Log Entry */
+        function addLogEntry(msg, styleClass) {
+            const logsContainer = document.getElementById('logs-list');
+            if (totalRounds === 1) logsContainer.innerHTML = '';
+
+            const logDiv = document.createElement('div');
+            logDiv.className = `p-3 rounded-xl border text-xs font-bold flex justify-between items-center ${styleClass} transition-all duration-300 transform translate-y-0`;
+            logDiv.innerText = msg;
+            logsContainer.prepend(logDiv);
+        }
+
+        /* Modal logic */
+        function showModal(dest) {
+            document.getElementById('modal-stamp-icon').innerText = dest.stampEmoji;
+            document.getElementById('modal-title').innerText = `獲得【${dest.name}】紀念章！`;
+            document.getElementById('modal-desc').innerText = `恭喜累積達 ${dest.requiredWins} 勝！成功解鎖了 16:9 高畫質寫真與 ${dest.foodName}！`;
+            document.getElementById('unlock-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            playSynthSound('click');
+            document.getElementById('unlock-modal').classList.add('hidden');
+        }
+
+        /* Reset Progress */
+        function resetProgress() {
+            if (confirm("確定要重置所有比賽數據與收集到的紀念章嗎？")) {
+                playSynthSound('click');
+                playerScore = 0;
+                aiScore = 0;
+                totalRounds = 0;
+                totalWins = 0;
+                travelDestinations.forEach(d => d.unlocked = false);
+                document.getElementById('logs-list').innerHTML = `
+                    <div class="text-slate-400 text-center py-12 space-y-2">
+                        <i class="fa-solid fa-gamepad text-3xl text-slate-200"></i>
+                        <p>點擊上方出拳按鈕<br>開啟你的第一場對決吧！</p>
+                    </div>`;
+                document.getElementById('player-hand').innerText = '✊';
+                document.getElementById('ai-hand').innerText = '✊';
+                document.getElementById('round-badge').classList.add('hidden');
+                document.getElementById('status-message').innerText = "👈 請點擊下方按鈕出拳！贏得比賽解鎖新景點照片與集章！";
+                document.getElementById('status-message').className = "text-center text-sm sm:text-base font-extrabold text-slate-700 bg-amber-50 py-3.5 px-4 rounded-2xl border-2 border-amber-200 mb-6 shadow-inner";
+                renderStamps();
+                renderArticles();
+                updateUI();
+            }
+        }
+    </script>
+</body>
+</html>
